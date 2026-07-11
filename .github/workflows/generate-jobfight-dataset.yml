@@ -1,0 +1,45 @@
+name: Generate JobFight AI Dataset
+
+on:
+  push:
+    branches:
+      - jobfight-dataset
+    paths:
+      - "jobfight_dataset/generate_dataset.py"
+      - ".github/workflows/generate-jobfight-dataset.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  generate:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out branch
+        uses: actions/checkout@v4
+        with:
+          ref: jobfight-dataset
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install dependencies
+        run: pip install pandas openpyxl
+
+      - name: Generate CSV and Excel files
+        run: python jobfight_dataset/generate_dataset.py
+
+      - name: Commit generated dataset
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add jobfight_dataset/output/
+          if git diff --cached --quiet; then
+            echo "No dataset changes to commit."
+          else
+            git commit -m "Generate JobFight AI 1000-company seed dataset"
+            git push origin HEAD:jobfight-dataset
+          fi
